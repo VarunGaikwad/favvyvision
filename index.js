@@ -2,6 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const url_lib = require("url");
+const fs = require("fs");
 
 const app = express();
 
@@ -15,6 +16,7 @@ const default_response = (req, res) =>
     .setHeader("content-type", "image/png")
     .status(404)
     .sendFile("/default.png", { root: __dirname });
+
 const isValidURL = (str) => {
   try {
     new URL(str);
@@ -38,6 +40,25 @@ const checkTag = ($) => {
   return link || "";
 };
 
+const memory = {
+  "https://mail.google.com": {
+    type: "image/png",
+    path: "./icons/aHR0cHM6Ly9tYWlsLmdvb2dsZS5jb20=",
+  },
+  "https://chatgpt.com": {
+    type: "image/png",
+    path: "./icons/aHR0cHM6Ly9jaGF0Z3B0LmNvbQ==",
+  },
+};
+
+const icon_from_memory = (origin, res) => {
+  const { type, path } = memory[origin];
+
+  return res.setHeader("content-type", type).status(200).sendFile(path, {
+    root: ".",
+  });
+};
+
 app.get("/favicon", async (req, res) => {
   const { url } = req.query;
 
@@ -45,6 +66,10 @@ app.get("/favicon", async (req, res) => {
 
   try {
     const { origin } = new URL(url);
+
+    console.log(btoa(origin));
+
+    if (memory[origin]) return icon_from_memory(origin, res);
 
     const { data: html } = await axios(origin, {
       headers,
@@ -66,6 +91,17 @@ app.get("/favicon", async (req, res) => {
     });
 
     res.setHeader("content-type", header["content-type"]);
+
+    fs.writeFile(`./icons/${btoa(origin)}`, data, (err) => {
+      if (err) {
+        return "";
+      }
+
+      memory[origin] = {
+        type: header["content-type"],
+        path: `./icons/${btoa(origin)}`,
+      };
+    });
 
     return res.send(data).status(200);
   } catch (error) {
