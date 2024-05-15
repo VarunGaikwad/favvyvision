@@ -73,6 +73,10 @@ app.get("/favicon", async (req, res) => {
   }
 });
 
+app.get("/", (req, res) =>
+  res.status(200).send("Welcome Favvy Vision 😁 😀 😊")
+);
+
 const port = 3000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
