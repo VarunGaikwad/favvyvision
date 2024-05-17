@@ -67,8 +67,6 @@ app.get("/favicon", async (req, res) => {
   try {
     const { origin } = new URL(url);
 
-    console.log(btoa(origin));
-
     if (memory[origin]) return icon_from_memory(origin, res);
 
     const { data: html } = await axios(origin, {
@@ -91,7 +89,7 @@ app.get("/favicon", async (req, res) => {
     });
 
     res.setHeader("content-type", header["content-type"]);
-
+    res.set("Expires", new Date(Date.now() + 604800000).toUTCString());
     fs.writeFile(`./icons/${btoa(origin)}`, data, (err) => {
       if (err) {
         return "";
