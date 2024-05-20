@@ -54,7 +54,6 @@ const memory = {
 const icon_from_memory = (origin, res) => {
   const { type, path } = memory[origin];
   res.setHeader("content-type", header["content-type"]);
-  res.set("Expires", new Date(Date.now() + 86400000).toUTCString());
   return res.setHeader("content-type", type).status(200).sendFile(path, {
     root: ".",
   });
@@ -90,7 +89,6 @@ app.get("/favicon", async (req, res) => {
     });
 
     res.setHeader("content-type", header["content-type"]);
-    res.set("Expires", new Date(Date.now() + 86400000).toUTCString());
     fs.writeFile(`./icons/${btoa(origin)}`, data, (err) => {
       if (err) {
         return "";
