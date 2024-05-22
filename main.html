@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favicon Fetcher API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #4CAF50;
+        }
+
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 5px;
+            border-radius: 4px;
+            color: #d63384;
+        }
+
+        footer {
+            margin-top: 20px;
+            color: #888;
+        }
+
+        .api-section {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .api-section h3 {
+            color: #4CAF50;
+        }
+
+        .api-section pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: left;
+        }
+
+        .links {
+            margin-top: 20px;
+        }
+
+        .links a {
+            color: #4CAF50;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Welcome to the Favicon Fetcher API</h1>
+        <p>This API allows you to fetch the favicon of any website by simply providing its URL.</p>
+
+        <h2>How to Use</h2>
+        <div class="api-section">
+            <h3>GET /favicon</h3>
+            <p>Fetch the favicon of the specified website.</p>
+            <pre>
+Request:
+GET /favicon?url=<website_url>
+
+Parameters:
+- url (required): The URL of the website you want to fetch the favicon from.
+
+Example:
+<a href="/favicon?url=www.google.com">/favicon?url=www.google.com</a>
+            </pre>
+            <h4>Response</h4>
+            <p>The API will return the favicon image of the specified website.</p>
+        </div>
+
+        <h2>About Me</h2>
+        <p>Hello! I'm [Your Name], the developer behind the Favicon Fetcher API. I have a passion for web development
+            and creating useful tools for developers. This API was created to simplify the process of retrieving
+            favicons from websites, making it easier for you to enhance your web applications.</p>
+        <p>Feel free to reach out with any questions or feedback!</p>
+
+        <div class="links">
+            <a href="https://www.linkedin.com/in/varun-gaikwad/" target="_blank">LinkedIn</a>
+            <a href="https://github.com/VarunGaikwad" target="_blank">GitHub</a>
+        </div>
+
+        <footer>
+            &copy; 2024 Favicon Fetcher API
+        </footer>
+    </div>
+</body>
+
+</html>
