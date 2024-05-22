@@ -30,6 +30,11 @@ const express = require("express"),
 
     return link || "";
   },
+  default_response = (req, res) =>
+    res
+      .setHeader("content-type", "image/png")
+      .status(404)
+      .sendFile("/default.png", { root: __dirname }),
   validate_url = (str) => {
     try {
       new URL(str);
@@ -38,7 +43,12 @@ const express = require("express"),
       return false;
     }
   },
-  memory = {};
+  memory = {
+    "https://chatgpt.com":
+      "https://cdn.oaistatic.com/_next/static/media/apple-touch-icon.82af6fe1.png",
+    "https://mail.google.com":
+      "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico",
+  };
 
 app.get("/", (_, res) => res.sendFile(path.join(__dirname, "main.html")));
 
@@ -67,6 +77,8 @@ app.get("/favicon", async (req, res) => {
       favicon_url = validate_url(_favicon_url)
         ? _favicon_url
         : url_lib.resolve(origin, _favicon_url);
+
+    if (!_favicon_url) return default_response(req, res);
 
     memory[origin] = favicon_url;
 
