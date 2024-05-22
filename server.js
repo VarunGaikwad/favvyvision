@@ -50,6 +50,7 @@ const express = require("express"),
       "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico",
     "https://development-oc58dg9d.us10cf.applicationstudio.cloud.sap":
       "https://development-oc58dg9d.us10cf.applicationstudio.cloud.sap/resources/images/ApplicationStudio_logo.png",
+	"https://www.soldev.app":"https://www.soldev.app/logo-light.svg"
   };
 
 app.get("/", (_, res) => res.sendFile(path.join(__dirname, "main.html")));
