@@ -68,7 +68,7 @@ app.get("/favicon", async (req, res) => {
         headers,
         responseType: "arraybuffer",
       });
-      res.setHeader("Expires", header["expires"]);
+
       res.setHeader("content-type", header["content-type"]);
       return res.send(data).status(200);
     }
@@ -91,7 +91,6 @@ app.get("/favicon", async (req, res) => {
       responseType: "arraybuffer",
     });
 
-    res.setHeader("Expires", header["expires"]);
     res.setHeader("content-type", header["content-type"]);
     return res.send(data).status(200);
   } catch (error) {
