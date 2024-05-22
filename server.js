@@ -48,6 +48,8 @@ const express = require("express"),
       "https://cdn.oaistatic.com/_next/static/media/apple-touch-icon.82af6fe1.png",
     "https://mail.google.com":
       "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico",
+    "https://development-oc58dg9d.us10cf.applicationstudio.cloud.sap":
+      "https://development-oc58dg9d.us10cf.applicationstudio.cloud.sap/resources/images/ApplicationStudio_logo.png",
   };
 
 app.get("/", (_, res) => res.sendFile(path.join(__dirname, "main.html")));
