@@ -1,5 +1,6 @@
 const express = require("express"),
   axios = require("axios"),
+  fs = require("fs"),
   cheerio = require("cheerio"),
   url_lib = require("url"),
   path = require("path"),
@@ -44,13 +45,18 @@ const express = require("express"),
     }
   },
   memory = {
-    "https://chatgpt.com":
-      "https://cdn.oaistatic.com/_next/static/media/apple-touch-icon.82af6fe1.png",
-    "https://mail.google.com":
-      "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico",
-    "https://development-oc58dg9d.us10cf.applicationstudio.cloud.sap":
-      "https://development-oc58dg9d.us10cf.applicationstudio.cloud.sap/resources/images/ApplicationStudio_logo.png",
-    "https://www.soldev.app": "https://www.soldev.app/logo-light.svg",
+    "https://chatgpt.com": {
+      url:
+        "https://cdn.oaistatic.com/_next/static/media/apple-touch-icon.82af6fe1.png",
+    },
+    "https://mail.google.com": {
+      url: "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico",
+    },
+    "https://development-oc58dg9d.us10cf.applicationstudio.cloud.sap": {
+      url:
+        "https://development-oc58dg9d.us10cf.applicationstudio.cloud.sap/resources/images/ApplicationStudio_logo.png",
+    },
+    "https://www.soldev.app": { url: "https://www.soldev.app/logo-light.svg" },
   };
 
 app.get("/", (_, res) => res.sendFile(path.join(__dirname, "main.html")));
@@ -64,7 +70,19 @@ app.get("/favicon", async (req, res) => {
     const { origin } = correct_url(url);
 
     if (memory[origin]) {
-      const { data, headers: header } = await axios.get(memory[origin], {
+      const { url, icon_path, icon_type } = memory[origin];
+
+      if (icon_path) {
+        const filePath = path.join(__dirname, icon_path);
+        res.setHeader("content-type", icon_type);
+        return res.sendFile(filePath, (err) => {
+          if (err) {
+            res.status(err.status).end();
+          }
+        });
+      }
+
+      const { data, headers: header } = await axios.get(memory[origin].url, {
         headers,
         responseType: "arraybuffer",
       });
@@ -84,13 +102,18 @@ app.get("/favicon", async (req, res) => {
 
     if (!_favicon_url) throw Error("FavIcon missing!");
 
-    memory[origin] = favicon_url;
+    memory[origin] = { url: favicon_url };
 
     const { data, headers: header } = await axios.get(favicon_url, {
       headers,
       responseType: "arraybuffer",
     });
 
+    fs.writeFile(`./icons/${btoa(origin)}`, data, (err) => {
+      if (err) return;
+      memory[origin].icon_path = `/icons/${btoa(origin)}`;
+      memory[origin].icon_type = header["content-type"];
+    });
     res.setHeader("content-type", header["content-type"]);
     return res.send(data).status(200);
   } catch (error) {
