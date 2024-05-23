@@ -82,7 +82,7 @@ app.get("/favicon", async (req, res) => {
         ? _favicon_url
         : url_lib.resolve(origin, _favicon_url);
 
-    if (!_favicon_url) return default_response(req, res);
+    if (!_favicon_url) throw Error("FavIcon missing!");
 
     memory[origin] = favicon_url;
 
