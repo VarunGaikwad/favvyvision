@@ -1,3 +1,5 @@
+const { url } = require("inspector");
+
 const express = require("express"),
   axios = require("axios"),
   fs = require("fs"),
@@ -46,17 +48,21 @@ const express = require("express"),
   },
   memory = {
     "https://chatgpt.com": {
-      url:
-        "https://cdn.oaistatic.com/_next/static/media/apple-touch-icon.82af6fe1.png",
+      url: "https://cdn.oaistatic.com/_next/static/media/apple-touch-icon.82af6fe1.png",
     },
     "https://mail.google.com": {
       url: "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico",
     },
     "https://development-oc58dg9d.us10cf.applicationstudio.cloud.sap": {
-      url:
-        "https://development-oc58dg9d.us10cf.applicationstudio.cloud.sap/resources/images/ApplicationStudio_logo.png",
+      url: "https://development-oc58dg9d.us10cf.applicationstudio.cloud.sap/resources/images/ApplicationStudio_logo.png",
     },
     "https://www.soldev.app": { url: "https://www.soldev.app/logo-light.svg" },
+    "https://www.google.com/": {
+      url: "https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png",
+    },
+    "https://www.duolingo.com/": {
+      url: "https://d35aaqx5ub95lt.cloudfront.net/favicon.ico",
+    },
   };
 
 app.get("/", (_, res) => res.sendFile(path.join(__dirname, "main.html")));

@@ -12,6 +12,7 @@
             color: #333;
             padding: 20px;
             text-align: center;
+            margin: 0;
         }
 
         h1 {
@@ -32,6 +33,7 @@
             padding: 5px;
             border-radius: 4px;
             color: #d63384;
+            word-wrap: break-word;
         }
 
         footer {
@@ -53,6 +55,7 @@
             padding: 10px;
             border-radius: 4px;
             text-align: left;
+            overflow-x: auto;
         }
 
         .links {
@@ -63,6 +66,28 @@
             color: #4CAF50;
             text-decoration: none;
             margin: 0 10px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            .links a {
+                display: block;
+                margin: 5px 0;
+            }
+
+            pre {
+                white-space: pre-wrap;
+                /* Wrap text inside pre tags */
+                word-break: break-all;
+                /* Break words if needed */
+            }
         }
     </style>
 </head>
@@ -78,7 +103,7 @@
             <p>Fetch the favicon of the specified website.</p>
             <pre>
 Request:
-GET /favicon?url=<website_url>
+GET /favicon?url=&lt;website_url&gt;
 
 Parameters:
 - url (required): The URL of the website you want to fetch the favicon from.
@@ -91,7 +116,8 @@ Example:
         </div>
 
         <h2>About Me</h2>
-        <p>Hello! I'm Varun "PreApeXis" Gaikwad, the developer behind the Favicon Fetcher API. I have a passion for web development
+        <p>Hello! I'm Varun "PreApeXis" Gaikwad, the developer behind the Favicon Fetcher API. I have a passion for web
+            development
             and creating useful tools for developers. This API was created to simplify the process of retrieving
             favicons from websites, making it easier for you to enhance your web applications.</p>
         <p>Feel free to reach out with any questions or feedback!</p>
