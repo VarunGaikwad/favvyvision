@@ -1,130 +1,118 @@
-const { url } = require("inspector");
+const express = require('express');
+const axios = require('axios');
 
-const express = require("express"),
-  axios = require("axios"),
-  fs = require("fs"),
-  cheerio = require("cheerio"),
-  url_lib = require("url"),
-  path = require("path"),
-  app = express(),
-  headers = {
-    "User-Agent": "FavvyVision/1.0.0",
-  },
-  port = 3000,
-  correct_url = (url) => {
-    const prefix = "https://";
-    if (url.startsWith("http://") || url.startsWith("https://")) {
-      const { origin } = new URL(url);
-      return { origin };
-    }
-    const { origin } = new URL(`${prefix}${url}`);
-    return { origin };
-  },
-  check_tag = ($) => {
-    let link =
-      $('link[rel="icon"]').attr("href") ||
-      $('link[rel="shortcut icon"]').attr("href") ||
-      $('meta[property="og:image"]').attr("content") ||
-      $('meta[itemprop="image"]').attr("content");
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-    if (link && link.startsWith("//")) {
-      link = "https://" + link.slice(2);
-    }
+const faviconCache = new Map();
+const CACHE_TTL = 1000 * 60 * 60;
 
-    return link || "";
-  },
-  default_response = (req, res) =>
-    res
-      .setHeader("content-type", "image/png")
-      .status(404)
-      .sendFile("/default.png", { root: __dirname }),
-  validate_url = (str) => {
-    try {
-      new URL(str);
-      return true;
-    } catch (error) {
-      return false;
-    }
-  },
-  memory = {
-    "https://chatgpt.com": {
-      url: "https://cdn.oaistatic.com/_next/static/media/apple-touch-icon.82af6fe1.png",
-    },
-    "https://mail.google.com": {
-      url: "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico",
-    },
-    "https://development-oc58dg9d.us10cf.applicationstudio.cloud.sap": {
-      url: "https://development-oc58dg9d.us10cf.applicationstudio.cloud.sap/resources/images/ApplicationStudio_logo.png",
-    },
-    "https://www.soldev.app": { url: "https://www.soldev.app/logo-light.svg" },
-    "https://www.google.com/": {
-      url: "https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png",
-    },
-    "https://www.duolingo.com/": {
-      url: "https://d35aaqx5ub95lt.cloudfront.net/favicon.ico",
-    },
-  };
-
-app.get("/", (_, res) => res.sendFile(path.join(__dirname, "main.html")));
-
-app.get("/favicon", async (req, res) => {
-  const { url } = req.query;
-
-  if (!url) return res.status(400).send("Parameter missing");
-
+async function fetchFavicon(url) {
   try {
-    const { origin } = correct_url(url);
+    const response = await axios.get(url, { responseType: 'arraybuffer' });
+    return {
+      data: response.data,
+      size: response.data.length,
+      contentType: response.headers['content-type'] || 'image/x-icon',
+    };
+  } catch (err) {
+    return null;
+  }
+}
 
-    if (memory[origin]) {
-      const { url, icon_path, icon_type } = memory[origin];
+app.get('/favicon', async (req, res) => {
+  const { domain } = req.query;
+  if (!domain) return res.status(400).send('Missing domain parameter');
 
-      if (icon_path) {
-        const filePath = path.join(__dirname, icon_path);
-        res.setHeader("content-type", icon_type);
-        return res.sendFile(filePath, (err) => {
-          if (err) {
-            res.status(err.status).end();
-          }
-        });
-      }
+  const now = Date.now();
 
-      const { data, headers: header } = await axios.get(memory[origin].url, {
-        headers,
-        responseType: "arraybuffer",
-      });
-
-      res.setHeader("content-type", header["content-type"]);
-      return res.send(data).status(200);
+  // Check cache first
+  if (faviconCache.has(domain)) {
+    const cached = faviconCache.get(domain);
+    if (now - cached.timestamp < CACHE_TTL) {
+      res.set('Content-Type', cached.contentType);
+      return res.send(cached.data);
+    } else {
+      faviconCache.delete(domain); // Remove expired cache
     }
+  }
 
-    const { data: html } = await axios.get(origin, {
-        headers,
-      }),
-      $ = cheerio.load(html),
-      _favicon_url = check_tag($),
-      favicon_url = validate_url(_favicon_url)
-        ? _favicon_url
-        : url_lib.resolve(origin, _favicon_url);
+  // If not cached or expired, fetch new favicons
+  const googleUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
+  const duckUrl = `https://icons.duckduckgo.com/ip3/${domain}.ico&s=256`;
 
-    if (!_favicon_url) throw Error("FavIcon missing!");
+  const [googleFavicon, duckFavicon] = await Promise.all([
+    fetchFavicon(googleUrl),
+    fetchFavicon(duckUrl),
+  ]);
 
-    memory[origin] = { url: favicon_url };
+  const bestFavicon =
+    (googleFavicon && duckFavicon &&
+      (googleFavicon.size >= duckFavicon.size ? googleFavicon : duckFavicon)) ||
+    googleFavicon ||
+    duckFavicon;
 
-    const { data, headers: header } = await axios.get(favicon_url, {
-      headers,
-      responseType: "arraybuffer",
+  if (bestFavicon) {
+    // Save to cache
+    faviconCache.set(domain, {
+      data: bestFavicon.data,
+      size: bestFavicon.size,
+      contentType: bestFavicon.contentType,
+      timestamp: now,
     });
 
-    fs.writeFile(`./icons/${btoa(origin)}`, data, (err) => {
-      if (err) return;
-      memory[origin].icon_path = `/icons/${btoa(origin)}`;
-      memory[origin].icon_type = header["content-type"];
-    });
-    res.setHeader("content-type", header["content-type"]);
-    return res.send(data).status(200);
-  } catch (error) {
-    return res.send(error.message).status(400);
+    res.set('Content-Type', bestFavicon.contentType);
+    res.send(bestFavicon.data);
+  } else {
+    res.status(404).send('Favicon not found');
   }
 });
 
-app.listen(port);
+app.get('/', (req, res) => {
+  res.send(`
+    <html>
+      <head>
+        <title>Favicon API</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            text-align: center;
+            color: #333;
+          }
+          h1 {
+            color: #4A90E2;
+          }
+          code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>🧩 Welcome to the Favicon API</h1>
+        <p>This API allows you to fetch the favicon for any domain using a simple GET request.</p>
+        <h3>Usage</h3>
+        <p>
+          <code>/favicon?domain=example.com</code>
+        </p>
+        <p>
+          Returns the best-quality favicon from Google or DuckDuckGo sources.
+        </p>
+        <h3>Example</h3>
+        <p>
+          <a href="/favicon?domain=github.com">/favicon?domain=github.com</a>
+        </p>
+        <footer style="margin-top: 40px; font-size: 0.9em; color: #999;">
+          🚀 Powered by Node.js + Express
+        </footer>
+      </body>
+    </html>
+  `);
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Favicon proxy running at http://localhost:${PORT}`);
+});
