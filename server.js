@@ -124,5 +124,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Favicon proxy running at http://localhost:${PORT}`);
+  console.log(`🚀 Favvyvision proxy running at http://localhost:${PORT}`);
 });
