@@ -1,74 +1,84 @@
-const express = require('express');
-const axios = require('axios');
+const express = require("express");
+const axios = require("axios");
+const { parse } = require("tldts");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5173;
 
 const faviconCache = new Map();
 const CACHE_TTL = 1000 * 60 * 60;
 
 async function fetchFavicon(url) {
   try {
-    const response = await axios.get(url, { responseType: 'arraybuffer' });
+    const response = await axios.get(url, { responseType: "arraybuffer" });
     return {
       data: response.data,
       size: response.data.length,
-      contentType: response.headers['content-type'] || 'image/x-icon',
+      contentType: response.headers["content-type"] || "image/x-icon",
     };
   } catch (err) {
     return null;
   }
 }
 
-app.get('/favicon', async (req, res) => {
+app.get("/favicon", async (req, res) => {
   const { domain } = req.query;
-  if (!domain) return res.status(400).send('Missing domain parameter');
+  if (!domain) return res.status(400).send("Missing domain parameter");
 
   const now = Date.now();
 
-  // Check cache first
+  // Check cache
   if (faviconCache.has(domain)) {
     const cached = faviconCache.get(domain);
     if (now - cached.timestamp < CACHE_TTL) {
-      res.set('Content-Type', cached.contentType);
+      res.set("Content-Type", cached.contentType);
       return res.send(cached.data);
     } else {
-      faviconCache.delete(domain); // Remove expired cache
+      faviconCache.delete(domain);
     }
   }
 
-  // If not cached or expired, fetch new favicons
-  const googleUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
-  const duckUrl = `https://icons.duckduckgo.com/ip3/${domain}.ico&s=256`;
-
-  const [googleFavicon, duckFavicon] = await Promise.all([
-    fetchFavicon(googleUrl),
-    fetchFavicon(duckUrl),
-  ]);
-
-  const bestFavicon =
-    (googleFavicon && duckFavicon &&
-      (googleFavicon.size >= duckFavicon.size ? googleFavicon : duckFavicon)) ||
-    googleFavicon ||
-    duckFavicon;
-
-  if (bestFavicon) {
-    // Save to cache
-    faviconCache.set(domain, {
-      data: bestFavicon.data,
-      size: bestFavicon.size,
-      contentType: bestFavicon.contentType,
-      timestamp: now,
-    });
-
-    res.set('Content-Type', bestFavicon.contentType);
-    res.send(bestFavicon.data);
-  } else {
-    res.status(404).send('Favicon not found');
+  const tryDomains = [domain];
+  const parsed = parse(domain);
+  if (parsed && parsed.domain && parsed.domain !== domain) {
+    tryDomains.push(parsed.domain); // fallback to root domain
   }
+
+  for (const d of tryDomains) {
+    const googleUrl = `https://www.google.com/s2/favicons?domain=${d}&sz=256`;
+    const duckUrl = `https://icons.duckduckgo.com/ip3/${d}.ico&s=256`;
+
+    const [googleFavicon, duckFavicon] = await Promise.all([
+      fetchFavicon(googleUrl),
+      fetchFavicon(duckUrl),
+    ]);
+
+    const bestFavicon =
+      (googleFavicon &&
+        duckFavicon &&
+        (googleFavicon.size >= duckFavicon.size
+          ? googleFavicon
+          : duckFavicon)) ||
+      googleFavicon ||
+      duckFavicon;
+
+    if (bestFavicon) {
+      faviconCache.set(domain, {
+        data: bestFavicon.data,
+        size: bestFavicon.size,
+        contentType: bestFavicon.contentType,
+        timestamp: now,
+      });
+
+      res.set("Content-Type", bestFavicon.contentType);
+      return res.send(bestFavicon.data);
+    }
+  }
+
+  return res.status(404).send("Favicon not found");
 });
 
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   res.send(`
     <html>
       <head>
