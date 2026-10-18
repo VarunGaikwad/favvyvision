@@ -2,3 +2,4 @@ node_modules
 icons/*
 !icons/*.txt
 .env
+.pi/
