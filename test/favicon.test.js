@@ -61,6 +61,18 @@ test('health/home and malformed query shapes make no outbound calls', async t =>
   assert.equal(home.status, 200);
   assert.match(home.data.toString(), /Favicon API/);
   assert.match(home.headers['content-type'], /text\/html/);
+  assert.match(home.data.toString(), /<html lang="en">/);
+  assert.match(home.data.toString(), /id="domain-form"/);
+  for (const domain of ['github.com', 'wikipedia.org', 'stackoverflow.com']) {
+    assert.ok(home.data.toString().includes(`href="/favicon?domain=${domain}"`));
+  }
+  for (const [asset, type] of [['welcome.css', /text\/css/], ['welcome.js', /javascript/]]) {
+    const result = await get('/assets/' + asset);
+    assert.equal(result.status, 200);
+    assert.match(result.headers['content-type'], type);
+    assert.equal(result.headers['cache-control'], 'no-store');
+  }
+  assert.equal((await get('/assets/missing.js')).status, 404);
   for (const query of ['', 'domain=', 'domain=example.com&domain=example.org', 'domain[]=example.com',
     'domain[x]=example.com', 'domain=example.com&domain[]=evil.com', 'domain=https%3A%2F%2Fexample.com', 'domain=localhost']) {
     const result = await get('/favicon?' + query);

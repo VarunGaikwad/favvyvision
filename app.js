@@ -1,5 +1,6 @@
 const express = require('express');
 const { randomUUID } = require('node:crypto');
+const path = require('node:path');
 const { createFaviconService } = require('./favicon');
 
 function createApp(options = {}) {
@@ -23,16 +24,8 @@ function createApp(options = {}) {
     next();
   });
   app.get('/healthz', (req, res) => res.json({ status: 'ok' }));
-  app.get('/', (req, res) => res.type('html').send(`<!doctype html>
-<html><head><title>Favicon API</title><style>
-body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; text-align: center; color: #333; }
-h1 { color: #4A90E2; } code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; }
-</style></head><body><h1>🧩 Welcome to the Favicon API</h1>
-<p>Fetch a favicon using a simple GET request.</p><h3>Usage</h3>
-<p><code>/favicon?domain=example.com</code></p>
-<p>Returns the largest valid image by byte size from Google or DuckDuckGo (not necessarily the highest resolution).</p>
-<h3>Example</h3><a href="/favicon?domain=github.com">/favicon?domain=github.com</a>
-<footer>🚀 Powered by Node.js + Express</footer></body></html>`));
+  app.use('/assets', express.static(path.join(__dirname, 'public'), { index: false, cacheControl: false }));
+  app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
   app.get('/favicon', async (req, res, next) => {
     try {
       const params = new URL(req.originalUrl, 'http://localhost').searchParams;
